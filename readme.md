@@ -1,6 +1,5 @@
 
 # HA Riello's Besmart thermostats 
-> A curated list of awesome READMEs
 
 Support for Riello's Besmart thermostats.
 Be aware the thermostat may require more then 3 minute to refresh its states.
@@ -28,10 +27,6 @@ logger:
   logs:
     custom_components.climate.besmart: debug
 ```
-
-## Get Feedback
-
-- This repository. Submit a PR with your README!
 
 ## Contribute
 

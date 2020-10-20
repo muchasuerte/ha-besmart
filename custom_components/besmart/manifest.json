@@ -3,9 +3,8 @@
   "name": "HA BeSmart",
   "documentation": "https://github.com/muchasuerte/ha-besmart",
   "issue_tracker": "https://github.com/muchasuerte/ha-besmart/issues",
-  "dependencies": ["mqtt"],
+  "dependencies": [],
   "after_dependencies": ["http"],
   "codeowners": ["@muchasuerte"],
-  "requirements": [],
-  "quality_scale": "platinum"
+  "requirements": []
 }
