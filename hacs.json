@@ -1,7 +1,6 @@
 {
   "name": "BeSmart Integration",
-  "content_in_root": true,
-  "country": "NO",
+  "content_in_root": false,
   "domains": ["climate", "sensor"],
   "homeassistant": "0.113.3",
   "iot_class": ["Cloud Polling"]
