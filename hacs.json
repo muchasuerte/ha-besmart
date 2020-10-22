@@ -1,5 +1,5 @@
 {
-  "name": "HA BeSmart",
+  "name": "BeSmart Integration",
   "content_in_root": true,
   "country": "NO",
   "domains": ["climate", "sensor"],
