@@ -28,42 +28,63 @@ logger:
 """
 import logging
 from datetime import datetime, timedelta
-import voluptuous as vol
-
-from homeassistant.components.climate import (ClimateDevice, PLATFORM_SCHEMA, ATTR_TARGET_TEMP_LOW)
-from homeassistant.components.climate.const import (ATTR_TARGET_TEMP_HIGH,
-                                                    CURRENT_HVAC_OFF, CURRENT_HVAC_HEAT, CURRENT_HVAC_COOL,
-                                                    HVAC_MODE_AUTO, HVAC_MODE_OFF, HVAC_MODE_COOL,
-                                                    HVAC_MODE_HEAT, SUPPORT_TARGET_TEMPERATURE,
-                                                    SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE_RANGE)
-
-from homeassistant.const import (CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_ROOM, ATTR_STATE,
-                                 TEMP_CELSIUS, ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
-
-from homeassistant.const import STATE_ON, STATE_OFF
 
 import homeassistant.helpers.config_validation as cv
-
 import requests
+import voluptuous as vol
+from homeassistant.components.climate import (
+    ATTR_TARGET_TEMP_LOW,
+    PLATFORM_SCHEMA,
+    ClimateDevice,
+)
+from homeassistant.components.climate.const import (
+    ATTR_TARGET_TEMP_HIGH,
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_OFF,
+    HVAC_MODE_AUTO,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
+)
+from homeassistant.const import (
+    ATTR_STATE,
+    ATTR_TEMPERATURE,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_ROOM,
+    CONF_USERNAME,
+    STATE_OFF,
+    STATE_ON,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 
 _LOGGER = logging.getLogger(__name__)
-DEPENDENCIES = ['switch', 'sensor']
-REQUIREMENTS = ['requests']
+DEPENDENCIES = ["switch", "sensor"]
+REQUIREMENTS = ["requests"]
 
-DEFAULT_NAME = 'Besmart Thermostat'
+DEFAULT_NAME = "Besmart Thermostat"
 DEFAULT_TIMEOUT = 3
 
-ATTR_MODE = 'mode'
-STATE_UNKNOWN = 'unknown'
+ATTR_MODE = "mode"
+STATE_UNKNOWN = "unknown"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_ROOM): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_ROOM): cv.string,
+    }
+)
 
-SUPPORT_FLAGS = (SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE_RANGE | SUPPORT_TARGET_TEMPERATURE)
+SUPPORT_FLAGS = (
+    SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE_RANGE | SUPPORT_TARGET_TEMPERATURE
+)
 
 
 # pylint: disable=unused-argument
@@ -78,18 +99,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 # pylint: disable=too-many-instance-attributes
 class Besmart(object):
     """Representation of a Besmart thermostat."""
-    BASE_URL = 'http://www.besmart-home.com/Android_vokera_20160516/'
-    LOGIN = 'login.php'
-    ROOM_MODE = 'setRoomMode.php'
-    ROOM_LIST = 'getRoomList.php?deviceId={0}'
-    ROOM_DATA = 'getRoomData196.php?therId={0}&deviceId={1}'
-    ROOM_PROGRAM = 'getProgram.php?roomId={0}'
-    ROOM_TEMP = 'setRoomTemp.php'
-    ROOM_ECON_TEMP = 'setEconTemp.php'
-    ROOM_FROST_TEMP = 'setFrostTemp.php'
-    ROOM_CONF_TEMP = 'setComfTemp.php'
-    GET_SETTINGS = 'getSetting.php'
-    SET_SETTINGS = 'setSetting.php'
+
+    BASE_URL = "http://www.besmart-home.com/Android_vokera_20160516/"
+    LOGIN = "login.php"
+    ROOM_MODE = "setRoomMode.php"
+    ROOM_LIST = "getRoomList.php?deviceId={0}"
+    ROOM_DATA = "getRoomData196.php?therId={0}&deviceId={1}"
+    ROOM_PROGRAM = "getProgram.php?roomId={0}"
+    ROOM_TEMP = "setRoomTemp.php"
+    ROOM_ECON_TEMP = "setEconTemp.php"
+    ROOM_FROST_TEMP = "setFrostTemp.php"
+    ROOM_CONF_TEMP = "setComfTemp.php"
+    GET_SETTINGS = "getSetting.php"
+    SET_SETTINGS = "setSetting.php"
 
     def __init__(self, username, password):
         """Initialize the thermostat."""
@@ -109,10 +131,11 @@ class Besmart(object):
 
     def login(self):
         try:
-            resp = self._s.post(self.BASE_URL + self.LOGIN, data={
-                'un': self._username,
-                'pwd': self._password,
-                'version': '32'}, timeout=self._timeout)
+            resp = self._s.post(
+                self.BASE_URL + self.LOGIN,
+                data={"un": self._username, "pwd": self._password, "version": "32"},
+                timeout=self._timeout,
+            )
             if resp.ok:
                 self._device = resp.json()
         except Exception as ex:
@@ -126,12 +149,15 @@ class Besmart(object):
         try:
             if self._device:
                 resp = self._s.post(
-                    self.BASE_URL + self.ROOM_LIST.format(self._device.get('deviceId')),
-                    timeout=self._timeout)
+                    self.BASE_URL + self.ROOM_LIST.format(self._device.get("deviceId")),
+                    timeout=self._timeout,
+                )
                 if resp.ok:
                     self._lastupdate = datetime.now()
                     self._rooms = dict(
-                        (y.get('name').lower(), y) for y in filter(lambda x: x.get('id') != None, resp.json()))
+                        (y.get("name").lower(), y)
+                        for y in filter(lambda x: x.get("id") != None, resp.json())
+                    )
                     _LOGGER.debug("rooms: {}".format(self._rooms))
                     if len(self._rooms) == 0:
                         self._device = None
@@ -152,10 +178,12 @@ class Besmart(object):
         try:
             if self._device:
                 resp = self._s.get(
-                    self.BASE_URL + self.ROOM_DATA.format(
-                        room.get('therId'),
-                        self._device.get('deviceId')),
-                    timeout=self._timeout)
+                    self.BASE_URL
+                    + self.ROOM_DATA.format(
+                        room.get("therId"), self._device.get("deviceId")
+                    ),
+                    timeout=self._timeout,
+                )
                 if resp.ok:
                     return resp.json()
                 else:
@@ -170,8 +198,9 @@ class Besmart(object):
         self.login()
         try:
             resp = self._s.get(
-                self.BASE_URL + self.ROOM_PROGRAM.format(room.get('id')),
-                timeout=self._timeout)
+                self.BASE_URL + self.ROOM_PROGRAM.format(room.get("id")),
+                timeout=self._timeout,
+            )
             if resp.ok:
                 return resp.json()
         except Exception as ex:
@@ -180,7 +209,9 @@ class Besmart(object):
         return None
 
     def roomByName(self, name):
-        if self._lastupdate is None or datetime.now() - self._lastupdate > timedelta(seconds=120):
+        if self._lastupdate is None or datetime.now() - self._lastupdate > timedelta(
+            seconds=120
+        ):
             _LOGGER.debug("refresh rooms state")
             self.rooms()
 
@@ -193,16 +224,18 @@ class Besmart(object):
 
         if self._device and room:
             data = {
-                'deviceId': self._device.get('deviceId'),
-                'therId': room.get('roomMark'),
-                'mode': mode}
+                "deviceId": self._device.get("deviceId"),
+                "therId": room.get("roomMark"),
+                "mode": mode,
+            }
 
-            resp = self._s.post(self.BASE_URL + self.ROOM_MODE,
-                                data=data, timeout=self._timeout)
+            resp = self._s.post(
+                self.BASE_URL + self.ROOM_MODE, data=data, timeout=self._timeout
+            )
             if resp.ok:
                 msg = resp.json()
                 _LOGGER.debug("resp: {}".format(msg))
-                if msg.get('error') == 1:
+                if msg.get("error") == 1:
                     return True
 
         return None
@@ -219,22 +252,24 @@ class Besmart(object):
     def setRoomTemp(self, room_name, new_temp, url=None):
         url = url or self.ROOM_TEMP
         room = self.roomByName(room_name)
-        if room and self._device.get('deviceId'):
+        if room and self._device.get("deviceId"):
             new_temp = round(new_temp, 1)
             _LOGGER.debug("room: {}".format(room))
 
-            if room.get('tempUnit') in {'N/A', '0'}:
-                tpCInt, tpCIntFloat = str(new_temp).split('.')
+            if room.get("tempUnit") in {"N/A", "0"}:
+                tpCInt, tpCIntFloat = str(new_temp).split(".")
             else:
-                tpCInt, tpCIntFloat = self._fahToCent(new_temp).split('.')
+                tpCInt, tpCIntFloat = self._fahToCent(new_temp).split(".")
 
-            _LOGGER.debug("setRoomTemp: {} - {} - {}".format(new_temp, tpCInt, tpCIntFloat))
+            _LOGGER.debug(
+                "setRoomTemp: {} - {} - {}".format(new_temp, tpCInt, tpCIntFloat)
+            )
 
             data = {
-                'deviceId': self._device.get('deviceId'),
-                'therId': room.get('roomMark'),
-                'tempSet': tpCInt + "",
-                'tempSetFloat': tpCIntFloat + "",
+                "deviceId": self._device.get("deviceId"),
+                "therId": room.get("roomMark"),
+                "tempSet": tpCInt + "",
+                "tempSetFloat": tpCIntFloat + "",
             }
             _LOGGER.debug("url: {}".format(self.BASE_URL + url))
             _LOGGER.debug("data: {}".format(data))
@@ -242,7 +277,7 @@ class Besmart(object):
             if resp.ok:
                 msg = resp.json()
                 _LOGGER.debug("resp: {}".format(msg))
-                if msg.get('error') == 1:
+                if msg.get("error") == 1:
                     return True
         else:
             _LOGGER.warning("error on get the room by name: {}".format(room_name))
@@ -254,16 +289,17 @@ class Besmart(object):
 
         if self._device and room:
             data = {
-                'deviceId': self._device.get('deviceId'),
-                'therId': room.get('roomMark')
+                "deviceId": self._device.get("deviceId"),
+                "therId": room.get("roomMark"),
             }
 
-            resp = self._s.post(self.BASE_URL + self.GET_SETTINGS,
-                                data=data, timeout=self._timeout)
+            resp = self._s.post(
+                self.BASE_URL + self.GET_SETTINGS, data=data, timeout=self._timeout
+            )
             if resp.ok:
                 msg = resp.json()
                 _LOGGER.debug("resp: {}".format(msg))
-                if msg.get('error') == 0:
+                if msg.get("error") == 0:
                     return msg
 
         return None
@@ -273,31 +309,38 @@ class Besmart(object):
 
         if self._device and room:
             old_data = self.getSettings(room_name)
-            if old_data.get('error') == 0:
-                min_temp_set_point_ip, min_temp_set_point_fp = str(old_data.get("minTempSetPoint", "30.0")).split('.')
-                max_temp_set_point_ip, max_temp_set_point_fp = str(old_data.get("maxTempSetPoint", "30.0")).split('.')
-                temp_curver_ip, temp_curver_fp = str(old_data.get("tempCurver", "0.0")).split('.')
+            if old_data.get("error") == 0:
+                min_temp_set_point_ip, min_temp_set_point_fp = str(
+                    old_data.get("minTempSetPoint", "30.0")
+                ).split(".")
+                max_temp_set_point_ip, max_temp_set_point_fp = str(
+                    old_data.get("maxTempSetPoint", "30.0")
+                ).split(".")
+                temp_curver_ip, temp_curver_fp = str(
+                    old_data.get("tempCurver", "0.0")
+                ).split(".")
                 data = {
-                    'deviceId': self._device.get('deviceId'),
-                    'therId': room.get('roomMark'),
-                    'minTempSetPointIP': min_temp_set_point_ip,
-                    'minTempSetPointFP': min_temp_set_point_fp,
-                    'maxTempSetPointIP': max_temp_set_point_ip,
-                    'maxTempSetPointFP': max_temp_set_point_fp,
-                    'sensorInfluence': old_data.get("sensorInfluence", "0"),
-                    'tempCurveIP': temp_curver_ip,
-                    'tempCurveFP': temp_curver_fp,
-                    'unit': old_data.get('unit', '0'),
-                    'season': season,
-                    'boilerIsOnline': old_data.get('boilerIsOnline', '0')
+                    "deviceId": self._device.get("deviceId"),
+                    "therId": room.get("roomMark"),
+                    "minTempSetPointIP": min_temp_set_point_ip,
+                    "minTempSetPointFP": min_temp_set_point_fp,
+                    "maxTempSetPointIP": max_temp_set_point_ip,
+                    "maxTempSetPointFP": max_temp_set_point_fp,
+                    "sensorInfluence": old_data.get("sensorInfluence", "0"),
+                    "tempCurveIP": temp_curver_ip,
+                    "tempCurveFP": temp_curver_fp,
+                    "unit": old_data.get("unit", "0"),
+                    "season": season,
+                    "boilerIsOnline": old_data.get("boilerIsOnline", "0"),
                 }
 
-                resp = self._s.post(self.BASE_URL + self.SET_SETTINGS,
-                                    data=data, timeout=self._timeout)
+                resp = self._s.post(
+                    self.BASE_URL + self.SET_SETTINGS, data=data, timeout=self._timeout
+                )
                 if resp.ok:
                     msg = resp.json()
                     _LOGGER.debug("resp: {}".format(msg))
-                    if msg.get('error') == 0:
+                    if msg.get("error") == 0:
                         return msg
         return None
 
@@ -306,6 +349,7 @@ class Besmart(object):
 # pylint: disable=too-many-instance-attributes
 class Thermostat(ClimateDevice):
     """Representation of a Besmart thermostat."""
+
     # BeSmart thModel = 5
     # BeSmart WorkMode
     AUTO = 0  # 'Auto'
@@ -319,7 +363,7 @@ class Thermostat(ClimateDevice):
         "MANUAL": MANUAL,
         "ECO": ECONOMY,
         "PARTY": PARTY,
-        "IDLE": IDLE
+        "IDLE": IDLE,
     }
 
     PRESET_BESMART_TO_HA = {
@@ -327,24 +371,15 @@ class Thermostat(ClimateDevice):
         MANUAL: "MANUAL",
         ECONOMY: "ECO",
         PARTY: "PARTY",
-        IDLE: "IDLE"
+        IDLE: "IDLE",
     }
     PRESET_MODE_LIST = list(PRESET_HA_TO_BESMART)
 
-    HVAC_MODE_LIST = (
-        HVAC_MODE_COOL,
-        HVAC_MODE_HEAT
-    )
-    HVAC_MODE_BESMART_TO_HA = {
-        '1': HVAC_MODE_HEAT,
-        '0': HVAC_MODE_COOL
-    }
+    HVAC_MODE_LIST = (HVAC_MODE_COOL, HVAC_MODE_HEAT)
+    HVAC_MODE_BESMART_TO_HA = {"1": HVAC_MODE_HEAT, "0": HVAC_MODE_COOL}
 
     # BeSmart Season
-    HVAC_MODE_HA_BESMART = {
-        HVAC_MODE_HEAT: '1',
-        HVAC_MODE_COOL: '0'
-    }
+    HVAC_MODE_HA_BESMART = {HVAC_MODE_HEAT: "1", HVAC_MODE_COOL: "0"}
 
     def __init__(self, name, room, client):
         """Initialize the thermostat."""
@@ -353,15 +388,15 @@ class Thermostat(ClimateDevice):
         self._cl = client
         self._current_temp = 0
         self._current_state = self.IDLE
-        self._current_operation = ''
+        self._current_operation = ""
         self._current_unit = 0
         self._tempSetMark = 0
         self._heating_state = False
-        self._battery = '0'
+        self._battery = "0"
         self._frostT = 0
         self._saveT = 0
         self._comfT = 0
-        self._season = '1'
+        self._season = "1"
         self.update()
 
     @property
@@ -398,51 +433,53 @@ class Thermostat(ClimateDevice):
         _LOGGER.debug("Update called")
         data = self._cl.roomByName(self._room_name)
         _LOGGER.debug(data)
-        if data and data.get('error') == 0:
+        if data and data.get("error") == 0:
             try:
                 # from Sunday (0) to Saturday (6)
                 today = datetime.today().isoweekday() % 7
                 # 48 slot per day
-                index = datetime.today().hour * 2 + (1 if datetime.today().minute > 30 else 0)
-                programWeek = data['programWeek']
+                index = datetime.today().hour * 2 + (
+                    1 if datetime.today().minute > 30 else 0
+                )
+                programWeek = data["programWeek"]
                 # delete programWeek to have less noise on debug output
-                del data['programWeek']
+                del data["programWeek"]
 
                 self._tempSetMark = programWeek[today][index]
             except Exception as ex:
                 _LOGGER.warning(ex)
-                self._tempSetMark = '2'
+                self._tempSetMark = "2"
 
             try:
-                self._battery = bool(data.get('bat', '0'))
+                self._battery = bool(data.get("bat", "0"))
             except ValueError:
-                self._battery = '0'
+                self._battery = "0"
 
             try:
-                self._frostT = float(data.get('frostT'))
+                self._frostT = float(data.get("frostT"))
             except ValueError:
                 self._frostT = 5.0
             try:
-                self._saveT = float(data.get('saveT'))
+                self._saveT = float(data.get("saveT"))
             except ValueError:
                 self._saveT = 16.0
 
             try:
-                self._comfT = float(data.get('comfT'))
+                self._comfT = float(data.get("comfT"))
             except ValueError:
                 self._comfT = 20.0
             try:
-                self._current_temp = float(data.get('tempNow'))
+                self._current_temp = float(data.get("tempNow"))
             except ValueError:
                 self._current_temp = 20.0
 
-            self._heating_state = data.get('heating', '') == '1'
+            self._heating_state = data.get("heating", "") == "1"
             try:
-                self._current_state = int(data.get('mode'))
+                self._current_state = int(data.get("mode"))
             except ValueError:
                 self._current_temp = 0
-            self._current_unit = data.get('tempUnit')
-            self._season = data.get('season')
+            self._current_unit = data.get("tempUnit")
+            self._season = data.get("season")
 
     @property
     def name(self):
@@ -454,18 +491,18 @@ class Thermostat(ClimateDevice):
         """Return the device specific state attributes."""
         return {
             ATTR_MODE: self._current_state,
-            'battery_state': self._battery,
-            'frost_t': self._frostT,
-            'confort_t': self._comfT,
-            'save_t': self._saveT,
-            'season_mode': self.hvac_mode,
-            'heating_state': self._heating_state
+            "battery_state": self._battery,
+            "frost_t": self._frostT,
+            "confort_t": self._comfT,
+            "save_t": self._saveT,
+            "season_mode": self.hvac_mode,
+            "heating_state": self._heating_state,
         }
 
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        if self._current_unit == '0':
+        if self._current_unit == "0":
             return TEMP_CELSIUS
         else:
             return TEMP_FAHRENHEIT
@@ -528,7 +565,11 @@ class Thermostat(ClimateDevice):
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
 
-        _LOGGER.debug("temperature Frost: {} Eco: {} Conf: {}".format(temperature, target_temp_low, target_temp_high))
+        _LOGGER.debug(
+            "temperature Frost: {} Eco: {} Conf: {}".format(
+                temperature, target_temp_low, target_temp_high
+            )
+        )
         if temperature:
             self._cl.setRoomConfortTemp(self._room_name, temperature)
             # self._cl.setRoomFrostTemp(self._room_name, temperature)
@@ -536,4 +577,3 @@ class Thermostat(ClimateDevice):
             self._cl.setRoomConfortTemp(self._room_name, target_temp_high)
         if target_temp_low:
             self._cl.setRoomECOTemp(self._room_name, target_temp_low)
-
