@@ -13,7 +13,7 @@ Configuration example:
 
 ```yaml
 climate:
-  - platform: Besmart
+  - platform: besmart
     name: Besmart Thermostat
     username: <my-username>
     password: <my-password>
