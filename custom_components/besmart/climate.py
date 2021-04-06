@@ -357,6 +357,7 @@ class Thermostat(ClimateDevice):
     ECONOMY = 2  # 'Holiday - Economy'
     PARTY = 3  # 'Party - Confort'
     IDLE = 4  # 'Spento - Antigelo'
+    DHW = 5 # 'Sanitario - Domestic hot water only'
 
     PRESET_HA_TO_BESMART = {
         "AUTO": AUTO,
@@ -364,6 +365,7 @@ class Thermostat(ClimateDevice):
         "ECO": ECONOMY,
         "PARTY": PARTY,
         "IDLE": IDLE,
+        "DHW": DHW,
     }
 
     PRESET_BESMART_TO_HA = {
@@ -372,6 +374,7 @@ class Thermostat(ClimateDevice):
         ECONOMY: "ECO",
         PARTY: "PARTY",
         IDLE: "IDLE",
+        DHW: "DHW",
     }
     PRESET_MODE_LIST = list(PRESET_HA_TO_BESMART)
 
