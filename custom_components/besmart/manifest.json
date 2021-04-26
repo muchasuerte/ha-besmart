@@ -1,6 +1,7 @@
 {
   "domain": "besmart",
   "name": "HA BeSmart",
+  "version": "0.1",
   "documentation": "https://github.com/muchasuerte/ha-besmart",
   "issue_tracker": "https://github.com/muchasuerte/ha-besmart/issues",
   "dependencies": [],
