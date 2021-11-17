@@ -454,7 +454,7 @@ class Thermostat(ClimateEntity):
                 self._tempSetMark = "2"
 
             try:
-                self._battery = bool(data.get("bat", "0"))
+                self._battery =not bool(int(data.get("bat"))) #corrected to raise battery alert in ha 1=problem status false
             except ValueError:
                 self._battery = "0"
 
