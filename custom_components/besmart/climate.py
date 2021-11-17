@@ -35,7 +35,7 @@ import voluptuous as vol
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_LOW,
     PLATFORM_SCHEMA,
-    ClimateDevice,
+    ClimateEntity,
 )
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
@@ -347,7 +347,7 @@ class Besmart(object):
 
 # pylint: disable=abstract-method
 # pylint: disable=too-many-instance-attributes
-class Thermostat(ClimateDevice):
+class Thermostat(ClimateEntity):
     """Representation of a Besmart thermostat."""
 
     # BeSmart thModel = 5
